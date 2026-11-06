@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>CTRC · Diário de Treino</title>
+<style>
+:root{--bg:#101112;--panel:#1b1d20;--panel2:#24272b;--text:#f4f4f4;--muted:#a7abb1;--accent:#e8b323;--line:#34383e;--good:#70c69a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 14px calc(24px + env(safe-area-inset-bottom))}
+header{padding:22px 4px 16px}header small{color:var(--accent);font-weight:800;letter-spacing:1.5px}h1{font-size:27px;margin:6px 0}p{color:var(--muted);line-height:1.45;margin:6px 0}
+nav{display:flex;gap:8px;overflow:auto;padding:5px 0 14px;position:sticky;top:0;background:var(--bg);z-index:3}
+button,.tab{border:0;border-radius:12px;padding:12px 14px;font-weight:700;background:var(--panel2);color:var(--text);font-size:14px}
+button.primary,.tab.active{background:var(--accent);color:#151515}
+button:disabled{opacity:.4}
+main{max-width:760px;margin:auto}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;margin:10px 0}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.muted{color:var(--muted);font-size:13px}
+h2{font-size:20px;margin:4px 0 8px}h3{font-size:16px;margin:0 0 5px}
+.exercise{padding:13px 0;border-top:1px solid var(--line)}.exercise:first-of-type{border-top:0}
+input,select,textarea{width:100%;background:#111315;border:1px solid #41464e;color:var(--text);border-radius:10px;padding:11px;font:inherit;margin:5px 0 9px}
+label{font-size:12px;color:var(--muted);font-weight:700;display:block;margin-top:7px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.smallbtn{padding:9px 11px;font-size:12px}
+.sets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sets input{min-width:0}
+.pill{font-size:11px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.hidden{display:none!important}.historyitem{border-top:1px solid var(--line);padding:10px 0}
+.notice{background:#292515;border:1px solid #69551b;padding:12px;border-radius:12px;color:#f5dfa0;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<header><small>CTRC · TRAINING LOG</small><h1>Diário de Treino</h1><p>Registre cargas, repetições, alternativas e evolução. Seus dados ficam neste aparelho até você exportar.</p></header>
+<nav id="tabs"></nav>
+<section id="content"></section>
+</main>
+<script>
+const plans = {
+ A:{name:"Upper 1",focus:"Peito · Costas · Braços",items:[
+ ["Supino convergente reto","3","6–10","Supino reto com halteres; supino reto no Smith"],
+ ["Remada articulada com apoio no peito","3","8–10","Remada T-bar com apoio"],
+ ["Supino inclinado máquina","3","8–12","Smith inclinado; supino inclinado com halteres"],
+ ["Puxada alta pronada","3","8–12","Puxada articulada; barra fixa assistida"],
+ ["Elevação lateral máquina","2","12–15","Elevação lateral no cabo"],
+ ["Tríceps corda","2","10–12","Tríceps máquina"],
+ ["Rosca Scott máquina","2","10–12","Rosca Scott com barra W"]
+ ]},
+ B:{name:"Lower 1",focus:"Quadríceps · Posteriores · Panturrilha",items:[
+ ["Hack squat","3","8–10","Leg press; pendulum"],
+ ["Mesa flexora","3","10–12","Flexora sentada"],
+ ["Leg press","2","10–12","Agachamento Smith em amplitude confortável"],
+ ["Cadeira extensora","2","12–15","Outra máquina de extensão de joelho"],
+ ["Panturrilha em pé","3","10–15","Panturrilha no leg press"],
+ ["Abdominal na polia","2","12–15","Abdominal máquina"]
+ ]},
+ C:{name:"Upper 2",focus:"Costas · Peito · Ombros · Braços",items:[
+ ["Puxada articulada neutra","3","8–10","Puxada neutra na polia"],
+ ["Supino inclinado convergente","3","8–10","Supino inclinado com halteres; Smith"],
+ ["Remada baixa unilateral","3","10–12","Remada baixa com triângulo"],
+ ["Crucifixo máquina","2","12–15","Crossover"],
+ ["Desenvolvimento máquina","2","8–12","Desenvolvimento com halteres"],
+ ["Rosca martelo","2","10–12","Rosca alternada"],
+ ["Tríceps francês na polia","2","10–12","Tríceps testa na polia"]
+ ]},
+ D:{name:"Lower 2",focus:"Posteriores · Glúteos · Quadríceps",items:[
+ ["Terra romeno","3","8–10","Terra romeno no Smith"],
+ ["Flexora sentada","3","10–12","Mesa flexora"],
+ ["Hip thrust","3","8–12","Glute drive"],
+ ["Leg press","2","10–12","Hack com amplitude confortável"],
+ ["Cadeira abdutora","2","12–15","Abdução no cabo"],
+ ["Panturrilha sentada","3","12–15","Panturrilha em pé"]
+ ]},
+ F1:{name:"Full Body 1",focus:"Ênfase quadríceps e empurrar",items:[
+ ["Leg press","3","8–12","Hack"],
+ ["Supino convergente","3","8–10","Supino com halteres"],
+ ["Remada articulada","3","8–12","Remada baixa"],
+ ["Mesa flexora","2","10–12","Flexora sentada"],
+ ["Elevação lateral","2","12–15","Elevação lateral no cabo"],
+ ["Tríceps corda","2","10–12","Tríceps máquina"],
+ ["Rosca Scott","2","10–12","Rosca com halteres"]
+ ]},
+ F2:{name:"Full Body 2",focus:"Ênfase posterior e puxar",items:[
+ ["Terra romeno","3","8–10","Terra romeno no Smith"],
+ ["Puxada alta","3","8–12","Puxada articulada"],
+ ["Supino inclinado","3","8–12","Supino inclinado máquina"],
+ ["Hip thrust","2","10–12","Glute drive"],
+ ["Cadeira extensora","2","12–15","Leg press em amplitude confortável"],
+ ["Desenvolvimento máquina","2","10–12","Desenvolvimento com halteres"],
+ ["Panturrilha","2","12–15","Panturrilha no leg press"]
+ ]}
+};
+const labels={A:"A",B:"B",C:"C",D:"D",F1:"FB1",F2:"FB2"};
+let active="A", data=JSON.parse(localStorage.getItem("ctrc_log_v1")||'{"sessions":[]}'), draft={};
+const $=s=>document.querySelector(s);
+function save(){localStorage.setItem("ctrc_log_v1",JSON.stringify(data))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function renderTabs(){ $("#tabs").innerHTML=Object.keys(plans).map(k=>`<button class="tab ${active===k?'active':''}" data-k="${k}">${labels[k]}</button>`).join("");$("#tabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{active=b.dataset.k;render()})}
+function render(){
+ renderTabs();let p=plans[active];
+ $("#content").innerHTML=`<div class="panel"><div class="pill">Treino selecionado</div><div class="row"><div><h2>${p.name}</h2><p>${p.focus}</p></div><span class="pill">${labels[active]}</span></div><label>Data do treino</label><input id="date" type="date" value="${new Date().toISOString().slice(0,10)}"><label>Como você chegou hoje?</label><select id="feeling"><option>Bem disposto</option><option>Normal</option><option>Cansado</option><option>Com dor ou desconforto</option></select><div class="notice">Faça o exercício principal ou escolha uma alternativa. Registre as séries realizadas. Não force movimentos com dor.</div></div>
+ ${p.items.map((it,i)=>`<div class="panel exercise"><div class="row"><div><div class="pill">Exercício ${i+1} · ${it[1]} séries · ${it[2]} reps</div><h3>${it[0]}</h3></div><button class="smallbtn" data-alt="${i}">Alternativa</button></div><div id="chosen${i}" class="muted">Principal selecionado</div><div class="sets">${Array.from({length:Number(it[1])},(_,j)=>`<div><label>Série ${j+1} · kg</label><input inputmode="decimal" placeholder="Carga" id="w${i}_${j}"><label>Reps</label><input inputmode="numeric" placeholder="Reps" id="r${i}_${j}"></div>`).join("")}</div><label>Observação do exercício</label><input id="n${i}" placeholder="Ex.: execução, RIR, máquina usada"></div>`).join("")}
+ <div class="panel"><label>Observações gerais</label><textarea id="general" rows="3" placeholder="Sono, energia, dores, duração..."></textarea><footer><button class="primary" id="finish">Salvar treino</button><button id="clear">Limpar campos</button></footer></div>
+ <div class="panel"><div class="row"><h3>Histórico recente</h3><button class="smallbtn" id="historyBtn">Ver histórico</button></div><div id="history" class="hidden"></div></div>
+ <div class="panel"><h3>Seus dados</h3><p>Exporte o histórico em JSON para compartilhar aqui e analisarmos sua evolução.</p><footer><button class="primary" id="export">Exportar JSON</button><button id="importBtn">Importar JSON</button><input id="importFile" type="file" accept=".json,application/json" class="hidden"></footer><p class="muted">O histórico fica salvo no armazenamento deste navegador. Exporte uma cópia regularmente.</p></div>`;
+ p.items.forEach((it,i)=>{$(`[data-alt="${i}"]`).onclick=()=>{let choices=it[3].split(";").map(x=>x.trim());let pick=prompt("Escolha uma alternativa:\n"+choices.map((x,j)=>(j+1)+". "+x).join("\n")+"\n\nDigite o número. Cancele para manter o principal.");if(pick&&choices[Number(pick)-1]){$("#chosen"+i).textContent="Alternativa: "+choices[Number(pick)-1];$("#chosen"+i).dataset.choice=choices[Number(pick)-1]}}});
+ $("#finish").onclick=saveSession;$("#clear").onclick=()=>{if(confirm("Limpar os campos deste treino?"))render()};
+ $("#export").onclick=exportJSON;$("#importBtn").onclick=()=>$("#importFile").click();$("#importFile").onchange=importJSON;
+ $("#historyBtn").onclick=()=>{let h=$("#history");h.classList.toggle("hidden");h.innerHTML=data.sessions.slice().reverse().slice(0,10).map(s=>`<div class="historyitem"><b>${esc(s.planName)}</b> · ${esc(s.date)}<div class="muted">${esc(s.feeling)} · ${s.exercises.length} exercícios</div></div>`).join("")||"<p>Sem treinos registrados ainda.</p>"};
+}
+function saveSession(){
+ let p=plans[active], exercises=p.items.map((it,i)=>({name:it[0],selected:$("#chosen"+i).dataset.choice||it[0],sets:Array.from({length:Number(it[1])},(_,j)=>({kg:$(`#w${i}_${j}`).value,reps:$(`#r${i}_${j}`).value})).filter(x=>x.kg||x.reps),note:$(`#n${i}`).value})).filter(e=>e.sets.length||e.note||e.selected!==e.name);
+ if(!exercises.length){alert("Registre ao menos uma série antes de salvar.");return}
+ data.sessions.push({id:Date.now(),date:$("#date").value,plan:active,planName:p.name,feeling:$("#feeling").value,general:$("#general").value,exercises});
+ save();alert("Treino salvo neste aparelho.");render();
+}
+function exportJSON(){
+ const blob=new Blob([JSON.stringify({app:"CTRC Diário de Treino",version:1,exportedAt:new Date().toISOString(),sessions:data.sessions},null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="ctrc-treinos-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(url);
+}
+function importJSON(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.sessions))throw Error();if(confirm("Importar "+x.sessions.length+" registros? Eles serão adicionados ao histórico atual.")){data.sessions.push(...x.sessions);save();alert("Importação concluída.");render()}}catch(_){alert("Arquivo JSON inválido.")}};r.readAsText(f)}
+render();
+</script>
+</body></html>
